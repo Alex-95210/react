@@ -1,6 +1,8 @@
 import "./App.css";
 import Home from "./components/Pages/Home";
 import Car from './components/Pages/Car'
+import Manufacturer from './components/Pages/Manufacturer'
+import Manufacturers from './components/manufacturer/Manufacturers'
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import axios from "axios";
 import About from './components/Pages/About'
@@ -10,6 +12,9 @@ class App extends Component {
   state = {
     cars: [],
     car: {},
+    manufacturers:[],
+    manufacturer:{},
+    manufacturerCars:[],
     loading: false,
   };
 
@@ -36,11 +41,31 @@ class App extends Component {
     this.setState({ car: res, loading: false });
   }
 
+  getAllManufacturers = async () => {
+    this.setState({ loading: true });
+    const res = await axios.get(
+      "https://private-anon-3bf7efa92c-carsapi1.apiary-mock.com/manufacturers"
+    );
+    this.setState({ manufacturers: res.data, loading: false });
+  }
+
+  getCarsByBrandName = async (brandName) =>{
+    let res = [];
+    this.setState({ loading: true})
+    for(let auto of this.state.cars){
+      if(auto.make == brandName){
+        res.push(auto);
+      }
+    }
+    this.setState({ manufacturerCars: res , loading: false });
+  }
+
   async componentDidMount() {
     this.getAllCars();
+    this.getAllManufacturers();
   }
   render() {
-const {cars, loading, car } = this.state;
+const {cars, loading, car, manufacturers, manufacturer } = this.state;
 
     return (
       <Router>
@@ -56,6 +81,17 @@ const {cars, loading, car } = this.state;
             <Route exact path='/about' component={About} />
             <Route exact path='/car/:id' render={props => ( 
             <Car { ...props } getCarById={this.getCarById} car={car}/>
+            )}
+            />
+            <Route
+              exact
+              path="/manufacturers"
+              render={(props) => (
+                <Manufacturers loading={loading} manufacturers={manufacturers} loading={loading} />
+              )}
+            />
+            <Route exact path='/manufacturer/:name' render={props => ( 
+            <Manufacturer { ...props } getCarsByBrandName={this.getCarsByBrandName} manufacturer={manufacturer}/>
             )}
             />
           </Switch>
